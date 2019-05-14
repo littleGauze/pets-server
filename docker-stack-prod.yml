@@ -1,0 +1,94 @@
+---
+version: '3.2'
+services:
+  pets-server:
+    image: ${IMAGE}
+    networks:
+      - inner
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      mode: replicated
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+    environment:
+      REDIS_HOST: 'redis'
+      REDIS_PASSWORD: ''
+      MONGO_URL: 'mongodb://root:xxx@mongo:27017/pets' # replace it
+      WHITE_LIST: '["http://pets", "http://pets.example.com", "http://pics.example.com"]' # replace it
+  redis:
+    image: redis:4.0-alpine
+    networks:
+      - inner
+    deploy:
+      mode: replicated
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+    volumes:
+      - type: bind
+        source: /var/redis/data
+        target: /data
+  mongo:
+    image: mongo:3.6.12-xenial
+    restart: always
+    networks:
+      - inner
+    deploy:
+      mode: replicated
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: xxx
+    volumes:
+      - type: bind
+        source: /var/mongodb/data
+        target: /data/db
+      - type: bind
+        source: /etc/mongo
+        target: /etc/mongo
+  mongo-exp:
+    image: mongo-express:latest
+    restart: always
+    networks:
+      - inner
+    depends_on:
+      - mongo
+    deploy:
+      mode: replicated
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+        window: 120s
+      update_config:
+        parallelism: 1
+        delay: 10s
+    environment:
+      ME_CONFIG_BASICAUTH_USERNAME: 'gauze'
+      ME_CONFIG_BASICAUTH_PASSWORD: 'xxx'
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: xxx
+networks:
+  inner:
+    external:
+      name: proxy-inner
