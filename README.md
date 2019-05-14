@@ -52,4 +52,4 @@ if (env.NODE_ENV === 'production') {
 ```
 或者通过环境变量传入配置信息
 
-see [egg docs][egg] for more detail.
+see [egg docs](https://eggjs.org/) for more detail.
